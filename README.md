@@ -1,32 +1,88 @@
-# _Sample project_
+# Kerststal 2025
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+ESP32-based nativity scene with:
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+- WS2812B LED strip control
+- DFPlayer Mini audio playback
+- Motor control for animations
+- Multiple scenes
 
+## Hardware
 
+- ESP32
+- WS2812B LED strip (90 LEDs)
+- DFPlayer Mini
+- DC Motor
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+## Build
 
-## Example folder contents
-
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
-
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
-
-Below is short explanation of remaining files in the project folder.
-
+```bash
+idf.py build
+idf.py flash monitor
 ```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
+
+## Overview electronics
+
+```mermaid
+graph TD
+    %% ESP32 pins
+    ESP32["ESP32 (15 pins)"]
+
+    %% Power
+    VCC5V["+5V voeding"]
+    GND["GND"]
+
+    %% LED strip
+    LEDStrip["WS2812B LED-strip"]
+    Res330["330Ω serie weerstand"]
+
+    %% DFPlayer
+    DFPlayer["DFPlayer Mini"]
+
+    %% Motors
+    Motor1["FS90R Motor 1"]
+    Motor2["FS90R Motor 2"]
+    Motor3["FS90R Motor 3"]
+    Motor4["FS90R Motor 4"]
+
+    %% Buttons
+    Button1["Button 1"]
+    Button2["Button 2"]
+    Button3["Button 3"]
+
+    %% Power connections
+    VCC5V --> LEDStrip
+    VCC5V --> DFPlayer
+    VCC5V --> Motor1
+    VCC5V --> Motor2
+    VCC5V --> Motor3
+    VCC5V --> Motor4
+
+    GND --> LEDStrip
+    GND --> DFPlayer
+    GND --> Motor1
+    GND --> Motor2
+    GND --> Motor3
+    GND --> Motor4
+    GND --> Button1
+    GND --> Button2
+    GND --> Button3
+
+    %% LED data
+    ESP32 -->|GPIO14| Res330 --> LEDStrip
+
+    %% DFPlayer UART
+    ESP32 -->|GPIO26 TX| DFPlayer
+    ESP32 -->|GPIO27 RX| DFPlayer
+
+    %% Motors signal
+    ESP32 -->|GPIO33| Motor1
+    ESP32 -->|GPIO32| Motor2
+    ESP32 -->|GPIO35| Motor3
+    ESP32 -->|GPIO34| Motor4
+
+    %% Buttons signal
+    ESP32 -->|GPIO2| Button1
+    ESP32 -->|GPIO15| Button2
+    ESP32 -->|GPIO18| Button3
 ```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
