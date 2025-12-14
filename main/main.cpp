@@ -28,10 +28,7 @@ extern "C" void app_main()
     esp_log_level_set("LEDStrip", ESP_LOG_DEBUG); // Set specific logging level for LEDStrip class
 
     Motors motors(motorPins);
-    ESP_LOGI("Main", "motor 0");
-    motors.getMotor(1).setSpeed(100); // Ensure motors are stopped at start
 
-    // Assuming you already have these objects created
     Lights strip = Lights(90, GPIO_NUM_27); // Example: 90 LEDs on GPIO 14
     DFPlayer player;
     player.begin(); // Now includes reset automatically
