@@ -10,8 +10,8 @@
 #include <string.h>
 
 #define DF_UART_NUM UART_NUM_1
-#define DF_RX GPIO_NUM_27 // ESP32 receives FROM DFPlayer TX
-#define DF_TX GPIO_NUM_26 // ESP32 sends TO DFPlayer RX
+#define DF_RX GPIO_NUM_14 // ESP32 receives FROM DFPlayer TX
+#define DF_TX GPIO_NUM_13 // ESP32 sends TO DFPlayer RX
 #define BUF_SIZE 1024
 
 class DFPlayer {
@@ -65,6 +65,7 @@ public:
             .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
             .rx_flow_ctrl_thresh = 122,
             .source_clk = UART_SCLK_DEFAULT,
+            .flags = { 0 },
         };
 
         ESP_ERROR_CHECK(uart_param_config(uart_num, &uart_config));

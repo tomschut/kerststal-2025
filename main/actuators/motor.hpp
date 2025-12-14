@@ -1,22 +1,26 @@
+#ifndef MOTOR_HPP
+#define MOTOR_HPP
 #include "driver/ledc.h"
 #include "esp_err.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <stdio.h>
 
 #define MOTOR_SPEED_FORWARD 2000 // duty voor volle snelheid vooruit
-#define MOTOR_SPEED_STOP 1500 // duty voor stop
+#define MOTOR_SPEED_STOP 1460 // duty voor stop
 #define MOTOR_SPEED_BACK 1000 // duty voor volle snelheid achteruit
 
 class Motor {
 private:
     int motorPin;
+    ledc_channel_t channel_;
+
     void setMotorDuty(uint32_t duty_us)
     {
-        // LEDC werkt met duty resolution bits
         uint32_t duty = (duty_us * ((1 << 13) - 1)) / 20000; // 20ms periode
-        ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, duty);
-        ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
+        ledc_set_duty(LEDC_HIGH_SPEED_MODE, channel_, duty);
+        ledc_update_duty(LEDC_HIGH_SPEED_MODE, channel_);
     }
 
     void setupMotorPWM()
@@ -29,7 +33,7 @@ private:
         ledc_timer_config(&timer_conf);
 
         ledc_channel_config_t channel_conf = {};
-        channel_conf.channel = LEDC_CHANNEL_0;
+        channel_conf.channel = channel_;
         channel_conf.duty = 0;
         channel_conf.gpio_num = motorPin;
         channel_conf.speed_mode = LEDC_HIGH_SPEED_MODE;
@@ -39,13 +43,16 @@ private:
     }
 
 public:
-    Motor(int pin = GPIO_NUM_32)
+    Motor(int pin, ledc_channel_t channel)
         : motorPin(pin)
+        , channel_(channel)
     {
         setupMotorPWM();
     }
 
-    void setSpeed(int speed, uint32_t duration_ms = 0)
+    void stop() { setMotorDuty(MOTOR_SPEED_STOP); }
+
+        void setSpeed(int speed, uint32_t duration_ms = 0)
     {
         // Clamp speed tussen -100 en 100
         if (speed > 100)
@@ -64,4 +71,6 @@ public:
             setMotorDuty(MOTOR_SPEED_STOP);
         }
     }
-}
+};
+
+#endif // MOTOR_HPP

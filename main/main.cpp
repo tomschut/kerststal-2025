@@ -1,62 +1,58 @@
+#include "actuators/dfplayer.hpp"
+#include "actuators/lights.hpp"
+#include "actuators/motors.hpp"
+#include "button_handler.hpp"
+#include "driver/gpio.h"
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/ledc.h"
-#include "esp_err.h"
-#include <stdio.h>
+#include "scenes/beuk_de_ballen_scene.hpp"
+#include "scenes/herdertjes_scene.hpp"
+#include "scenes/zakske_scene.hpp"
+#include "util.hpp" // for wait function
+#include <chrono> // for timing
+#include <utility> // for std::pair
+#include <vector>
 
-#define MOTOR_PIN GPIO_NUM_32
-#define MOTOR_SPEED_FORWARD 2000  // duty voor volle snelheid vooruit
-#define MOTOR_SPEED_STOP    1500  // duty voor stop
-#define MOTOR_SPEED_BACK    1000  // duty voor volle snelheid achteruit
+// Button GPIO pins
+constexpr gpio_num_t buttonPins[] = { GPIO_NUM_19, GPIO_NUM_4, GPIO_NUM_21 };
+constexpr gpio_num_t ledPins[] = { GPIO_NUM_18, GPIO_NUM_5, GPIO_NUM_22 };
+constexpr std::array<gpio_num_t, 4> motorPins = { GPIO_NUM_25, GPIO_NUM_26, GPIO_NUM_33, GPIO_NUM_23 };
 
-void setupMotorPWM()
-{
-    ledc_timer_config_t timer_conf = {};
-    timer_conf.duty_resolution = LEDC_TIMER_16_BIT;
-    timer_conf.freq_hz = 50;  // servo standaard 50Hz
-    timer_conf.speed_mode = LEDC_HIGH_SPEED_MODE;
-    timer_conf.timer_num = LEDC_TIMER_0;
-    ledc_timer_config(&timer_conf);
+constexpr int numButtons = sizeof(buttonPins) / sizeof(buttonPins[0]);
 
-    ledc_channel_config_t channel_conf = {};
-    channel_conf.channel    = LEDC_CHANNEL_0;
-    channel_conf.duty       = 0;
-    channel_conf.gpio_num   = MOTOR_PIN;
-    channel_conf.speed_mode = LEDC_HIGH_SPEED_MODE;
-    channel_conf.hpoint     = 0;
-    channel_conf.timer_sel  = LEDC_TIMER_0;
-    ledc_channel_config(&channel_conf);
-}
-
-void setMotorDuty(uint32_t duty_us)
-{
-    // LEDC werkt met duty resolution bits
-    uint32_t duty = (duty_us * ((1 << 16) - 1)) / 20000; // 20ms periode
-    ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, duty);
-    ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
-}
-
+// Main function
 extern "C" void app_main()
 {
-    printf("FS90R test gestart\n");
-    setupMotorPWM();
+    esp_log_level_set("*", ESP_LOG_INFO); // Set global logging level to INFO
+    esp_log_level_set("LEDStrip", ESP_LOG_DEBUG); // Set specific logging level for LEDStrip class
 
-    while (true)
-    {
-        printf("Vooruit draaien\n");
-        setMotorDuty(MOTOR_SPEED_FORWARD);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+    Motors motors(motorPins);
+    ESP_LOGI("Main", "motor 0");
+    motors.getMotor(1).setSpeed(100); // Ensure motors are stopped at start
 
-        printf("Stop\n");
-        setMotorDuty(MOTOR_SPEED_STOP);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+    // Assuming you already have these objects created
+    Lights strip = Lights(90, GPIO_NUM_27); // Example: 90 LEDs on GPIO 14
+    DFPlayer player;
+    player.begin(); // Now includes reset automatically
+    wait(1000); // Wait for initialization
+    player.setVolume(20);
 
-        printf("Achteruit draaien\n");
-        setMotorDuty(MOTOR_SPEED_BACK);
-        vTaskDelay(pdMS_TO_TICKS(2000));
+    ZakskeScene scene1(strip, player, motors);
+    BeukDeBallenScene scene2(strip, player, motors);
+    HerdertjesScene scene3(strip, player, motors);
+    // scene3.play(); // Test play
 
-        printf("Stop\n");
-        setMotorDuty(MOTOR_SPEED_STOP);
+    std::vector<Scene*> scenes = { &scene1, &scene2, &scene3 };
+
+    ButtonHandler buttons(strip, motors, buttonPins, ledPins, scenes);
+    buttons.start();
+
+    ESP_LOGI("Main", "Ready to go");
+
+    // Main thread can do other things
+    while (true) {
+        // maybe update other logic or monitor sensors
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
