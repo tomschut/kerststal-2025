@@ -29,7 +29,7 @@ extern "C" void app_main()
 
     Motors motors(motorPins);
 
-    Lights strip = Lights(90, GPIO_NUM_27); // Example: 90 LEDs on GPIO 14
+    Lights strip = Lights(89, GPIO_NUM_27); // Example: 90 LEDs on GPIO 14
     DFPlayer player;
     player.begin(); // Now includes reset automatically
     wait(1000); // Wait for initialization

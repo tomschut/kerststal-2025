@@ -52,7 +52,7 @@ public:
 
     void stop() { setMotorDuty(MOTOR_SPEED_STOP); }
 
-        void setSpeed(int speed, uint32_t duration_ms = 0)
+    void setSpeed(int speed, uint32_t duration_ms = 0)
     {
         // Clamp speed tussen -100 en 100
         if (speed > 100)

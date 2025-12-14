@@ -21,15 +21,15 @@ public:
     void play() override
     {
         ESP_LOGI("ZakskeScene", "Playing Zakske Scene");
-        player.playTrack(3);
+        player.playZakske();
         wait(2 * 1000); // wait for intro
 
         // strip.incrementalRainbow(20, 500);
-        motors.getMotor(0).setSpeed(100);
+        motors.getNativityMotor().setSpeed(50);
         // ----------------------------
         // 16 t/m 22 — LED 21 t/m 35
         // ----------------------------
-        strip.setMultipleLeds(21, 35, makeColor(255, 36, 15), 64);
+        strip.setMultipleLeds(20, 34, makeColor(255, 36, 15), 64);
         wait(7000);
 
         // ----------------------------
@@ -37,57 +37,57 @@ public:
         // ----------------------------
         // strip.setMultipleLeds(52, 62, makeColor(251, 255, 15), 255);
         ESP_LOGI("ZakskeScene", "Bliksem");
-        strip.lightning(50, 80, 5, 100, 200);
+        strip.lightning(48, 79, 5, 100, 200);
         wait(2000);
 
         // ----------------------------
         // 26 t/m 27 — LED 45 t/m 49
         // ----------------------------
         ESP_LOGI("ZakskeScene", "Stal");
-        strip.setMultipleLeds(45, 49, makeColor(255, 15, 243), 128);
-        strip.setMultipleLeds(24, 26, makeColor(255, 36, 15), 128);
+        strip.setMultipleLeds(44, 48, makeColor(255, 15, 243), 128);
+        strip.setMultipleLeds(23, 25, makeColor(255, 36, 15), 128);
         wait(2000);
 
         // ----------------------------
         // 27 t/m 29 — losse leds
         // ----------------------------
         ESP_LOGI("ZakskeScene", "Krib os ezel");
-        strip.setLed(24, makeColor(119, 15, 255), 128);
-        strip.setLed(25, makeColor(255, 15, 243), 128);
-        strip.setLed(26, makeColor(255, 36, 15), 128);
-        strip.setLed(27, makeColor(255, 140, 15), 128);
-        strip.setLed(28, makeColor(251, 255, 15), 128);
-        strip.setLed(29, makeColor(68, 255, 15), 128);
+        strip.setLed(23, makeColor(119, 15, 255), 128);
+        strip.setLed(24, makeColor(255, 15, 243), 128);
+        strip.setLed(25, makeColor(255, 36, 15), 128);
+        strip.setLed(26, makeColor(255, 140, 15), 128);
+        strip.setLed(27, makeColor(251, 255, 15), 128);
+        strip.setLed(28, makeColor(68, 255, 15), 128);
         wait(3000);
 
         // ----------------------------
         // 31 t/m 38 — reeks losse leds
         // ----------------------------
         ESP_LOGI("ZakskeScene", "ster");
-        strip.setLed(51, makeColor(251, 255, 15), 255);
-        strip.setLed(55, makeColor(251, 255, 15), 255);
-        strip.setLed(58, makeColor(251, 255, 15), 255);
-        strip.setLed(61, makeColor(251, 255, 15), 255);
-        strip.setLed(63, makeColor(251, 255, 15), 255);
-        strip.setLed(65, makeColor(251, 255, 15), 255);
+        strip.setLed(50, makeColor(251, 255, 15), 255);
+        strip.setLed(54, makeColor(251, 255, 15), 255);
+        strip.setLed(57, makeColor(251, 255, 15), 255);
+        strip.setLed(60, makeColor(251, 255, 15), 255);
+        strip.setLed(62, makeColor(251, 255, 15), 255);
+        strip.setLed(64, makeColor(251, 255, 15), 255);
         wait(5000);
 
         // extra blok 35 t/m 38
         ESP_LOGI("ZakskeScene", "fonkelen");
-        strip.setMultipleLeds(61, 65, makeColor(251, 255, 15), 255);
-        strip.setMultipleLeds(51, 58, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(60, 64, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(50, 57, makeColor(251, 255, 15), 255);
         strip.turnOff();
         wait(100);
-        strip.setMultipleLeds(61, 65, makeColor(251, 255, 15), 255);
-        strip.setMultipleLeds(51, 58, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(60, 64, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(50, 57, makeColor(251, 255, 15), 255);
         strip.turnOff();
         wait(100);
-        strip.setMultipleLeds(61, 65, makeColor(251, 255, 15), 255);
-        strip.setMultipleLeds(51, 58, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(60, 64, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(50, 57, makeColor(251, 255, 15), 255);
         strip.turnOff();
         wait(100);
-        strip.setMultipleLeds(61, 65, makeColor(251, 255, 15), 255);
-        strip.setMultipleLeds(51, 58, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(60, 64, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(50, 57, makeColor(251, 255, 15), 255);
         wait(3500);
 
         // --------
@@ -99,7 +99,7 @@ public:
         // ----------------------------
         // 40 t/m 42 — om-en-om
         // ----------------------------
-        for (int i = 22; i <= 36; i++) {
+        for (int i = 21; i <= 35; i++) {
             if ((i % 2) == 0)
                 strip.setLed(i, makeColor(68, 255, 15), 128);
             else
@@ -112,19 +112,19 @@ public:
         // ----------------------------
         // 43
         // ----------------------------
-        strip.setLed(30, makeColor(255, 140, 15), 128);
-        strip.setLed(32, makeColor(255, 140, 15), 128);
-        strip.setLed(34, makeColor(255, 140, 15), 128);
-        strip.setLed(29, makeColor(251, 255, 15), 128);
-        strip.setLed(31, makeColor(251, 255, 15), 128);
-        strip.setLed(33, makeColor(251, 255, 15), 128);
+        strip.setLed(29, makeColor(255, 140, 15), 128);
+        strip.setLed(31, makeColor(255, 140, 15), 128);
+        strip.setLed(33, makeColor(255, 140, 15), 128);
+        strip.setLed(28, makeColor(251, 255, 15), 128);
+        strip.setLed(30, makeColor(251, 255, 15), 128);
+        strip.setLed(32, makeColor(251, 255, 15), 128);
         wait(1000);
 
         // ----------------------------
         // 44
         // ----------------------------
-        strip.setLed(34, makeColor(68, 255, 15), 128);
-        strip.setLed(33, makeColor(15, 254, 255), 128);
+        strip.setLed(33, makeColor(68, 255, 15), 128);
+        strip.setLed(32, makeColor(15, 254, 255), 128);
         wait(2000);
 
         // ----------------------------
@@ -143,7 +143,7 @@ public:
 
         for (int m = 0; m < 10; m++) {
             for (int k = 0; k < 7; k++) {
-                strip.setMultipleLeds(21, 40, kleuren[k], 255);
+                strip.setMultipleLeds(20, 39, kleuren[k], 255);
                 wait(100);
             }
         }
@@ -151,7 +151,7 @@ public:
         // ----------------------------
         // 52 t/m 53 — LED 24 t/m 26
         // ----------------------------
-        strip.setMultipleLeds(24, 26, makeColor(255, 36, 15), 128);
+        strip.setMultipleLeds(23, 25, makeColor(255, 36, 15), 128);
         wait(2000);
         stop();
     }

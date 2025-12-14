@@ -23,8 +23,8 @@ public:
     {
         player.setVolume(25);
         ESP_LOGI("HerdertjesScene", "Playing Herdertjes Scene");
-        player.playTrack(1);
-        motors.getMotor(2).setSpeed(100);
+        player.playShepherd();
+        motors.getAngelMotor().setSpeed(20);
 
         // 10 t/m 32 — kleur R251 G255 B15 op LED 70 t/m 83
         strip.setMultipleLeds(70, 83, std::make_tuple(251, 255, 15), 255);

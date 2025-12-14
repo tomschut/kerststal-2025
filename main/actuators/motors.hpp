@@ -16,6 +16,11 @@ public:
 
     Motor& getMotor(int index) { return motors[index]; }
 
+    Motor& getShepherdMotor() { return motors[3]; }
+    Motor& getTreeMotor() { return motors[2]; }
+    Motor& getNativityMotor() { return motors[1]; }
+    Motor& getAngelMotor() { return motors[0]; }
+
     void stopAll()
     {
         for (auto& motor : motors) {

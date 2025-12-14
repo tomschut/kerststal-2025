@@ -21,20 +21,21 @@ public:
     void play() override
     {
         ESP_LOGI("BeukDeBallenScene", "Playing Beuk De Ballen Scene");
-        motors.getMotor(2).setSpeed(10);
-        player.playTrack(2);
+        motors.getTreeMotor().setSpeed(25);
+        player.playBeuk();
+        motors.getAngelMotor().setSpeed(40);
         // tot 18.5 langzaam
         strip.sparkeMultipleLeds(23 * 1000, 900); // 18.8 seconds of sparking LEDs
         // tot 25.8
-        strip.beatDrop(0, 89, 10.5 * 1000); // 12 seconds beat drop effect
+        strip.beatDrop(0, 88, 10.5 * 1000); // 12 seconds beat drop effect
         ESP_LOGI("BeukDeBallenScene", "Starting pulsing effects");
-        motors.getMotor(2).setSpeed(50);
+        motors.getTreeMotor().setSpeed(50);
         strip.pulsingChaos(6 * 1000); // 5 seconds of pulsing chaos
         ESP_LOGI("BeukDeBallenScene", "Pulsing beat");
-        motors.getMotor(2).setSpeed(100);
-        strip.pulsingBeatInSections(8 * 1000, 3); // 23 seconds of pulsing beat in sections
+        motors.getTreeMotor().setSpeed(100);
+        strip.pulsingBeatInSections(8 * 1000, 3); // 8 seconds of pulsing beat in sections
         strip.turnOff();
-        strip.pulsingBeatInSections(12.8 * 1000, 6); // 23 seconds of pulsing beat in sections
+        strip.pulsingBeatInSections(13 * 1000, 6); // 13 seconds of pulsing beat in sections
 
         stop();
     }

@@ -88,6 +88,12 @@ public:
         ESP_LOGI(TAG, "Play");
     }
 
+    void playShepherd() { playTrack(1); }
+
+    void playBeuk() { playTrack(2); }
+
+    void playZakske() { playTrack(3); }
+
     void stop()
     {
         sendCommand(0x16);
