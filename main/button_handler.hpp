@@ -4,7 +4,7 @@
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "scenes/scene.hpp"
+#include "scenes/scene_handler.hpp"
 #include <stdio.h>
 #include <tuple>
 #include <vector>
@@ -12,13 +12,13 @@
 class ButtonHandler {
 public:
     ButtonHandler(
-        Lights& strip, Motors& motors, const gpio_num_t* pins, const gpio_num_t* leds, std::vector<Scene*> scenes)
+        Lights& strip, Motors& motors, const gpio_num_t* pins, const gpio_num_t* leds, SceneHandler& sceneHandler)
         : strip_(strip)
         , motors_(motors) // <-- Store reference to motors
         , pins_(pins)
         , leds_(leds)
-        , scenes_(scenes)
-        , numButtons(scenes.size())
+        , sceneHandler_(sceneHandler)
+        , numButtons(sceneHandler.nScenes())
         , buttonTaskHandle_(nullptr)
         , blinkTaskHandle_(nullptr)
         , ambientGlowTaskHandle_(nullptr)
@@ -61,7 +61,7 @@ private:
     Motors& motors_; // <-- Reference to motors
     const gpio_num_t* pins_;
     const gpio_num_t* leds_;
-    std::vector<class Scene*> scenes_;
+    SceneHandler& sceneHandler_;
     int numButtons;
     TaskHandle_t buttonTaskHandle_;
     TaskHandle_t blinkTaskHandle_;
@@ -107,26 +107,32 @@ private:
         }
 
         while (true) {
+            if (sceneHandler_.isScenePlaying()) {
+                vTaskDelay(pdMS_TO_TICKS(100)); // Skip checking while scene is playing
+                pauseBlinking();
+                pauseAmbientGlow();
+                vTaskSuspend(keepMotorsStoppedTaskHandle_); // <-- Pause keepMotorsStoppedTask
+                continue;
+            }
+
+            vTaskResume(keepMotorsStoppedTaskHandle_); // <-- Resume after scene
+            resumeAmbientGlow();
+            resumeBlinking();
+            
             for (int i = 0; i < numButtons; ++i) {
                 int level = gpio_get_level(pins_[i]);
                 if (level == 0) { // button pressed
                     printf("Button %d pressed!\n", i + 1);
-                    if (scenes_[i]) {
-                        pauseBlinking();
-                        pauseAmbientGlow();
-                        vTaskSuspend(keepMotorsStoppedTaskHandle_); // <-- Pause keepMotorsStoppedTask
-                        gpio_set_level(leds_[i], 1);
-                        for (int j = 0; j < numButtons; ++j) {
-                            if (j != i)
-                                gpio_set_level(leds_[j], 0);
-                        }
-                        strip_.turnOff();
-                        scenes_[i]->play();
-                        vTaskResume(keepMotorsStoppedTaskHandle_); // <-- Resume after scene
-                        resumeAmbientGlow();
-                        resumeBlinking();
-                        vTaskDelay(pdMS_TO_TICKS(500)); // debounce
+
+                    gpio_set_level(leds_[i], 1);
+                    for (int j = 0; j < numButtons; ++j) {
+                        if (j != i)
+                            gpio_set_level(leds_[j], 0);
                     }
+                    strip_.turnOff();
+                    sceneHandler_.playScene(i);
+
+                    vTaskDelay(pdMS_TO_TICKS(500)); // debounce
                 }
             }
             vTaskDelay(pdMS_TO_TICKS(50));

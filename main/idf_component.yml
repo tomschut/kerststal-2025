@@ -2,7 +2,7 @@
 dependencies:
   ## Required IDF version
   idf:
-    version: '>=4.1.0'
+    version: ">=4.1.0"
   # # Put list of dependencies here
   # # For components maintained by Espressif:
   # component: "~1.0.0"
@@ -16,3 +16,5 @@ dependencies:
   #   public: true
   espressif/led_strip: ^3.0.2
   espp/rmt: ^1.0.31
+  espp/nvs: ^1.0.32
+  espressif/mqtt: ^1.0.0

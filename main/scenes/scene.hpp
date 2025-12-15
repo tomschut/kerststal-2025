@@ -14,11 +14,6 @@ public:
         , motors(motors)
     {
     }
-
-protected:
-    Lights& strip;
-    DFPlayer& player;
-    Motors& motors;
     void stop()
     {
         player.stop();
@@ -27,6 +22,11 @@ protected:
         motors.stopAll(); // if needed
         wait(500);
     }
+
+protected:
+    Lights& strip;
+    DFPlayer& player;
+    Motors& motors;
 };
 
 #endif // SCENE_HPP

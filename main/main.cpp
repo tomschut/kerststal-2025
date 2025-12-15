@@ -10,6 +10,9 @@
 #include "scenes/herdertjes_scene.hpp"
 #include "scenes/zakske_scene.hpp"
 #include "util.hpp" // for wait function
+#include "web/mqtt_client.hpp"
+#include "web/web_server.hpp"
+#include "wifi_connect.cpp" // or use a header if you have one
 #include <chrono> // for timing
 #include <utility> // for std::pair
 #include <vector>
@@ -21,35 +24,42 @@ constexpr std::array<gpio_num_t, 4> motorPins = { GPIO_NUM_25, GPIO_NUM_26, GPIO
 
 constexpr int numButtons = sizeof(buttonPins) / sizeof(buttonPins[0]);
 
+// SceneHandler global pointer
+SceneHandler* g_sceneHandler = nullptr;
+
 // Main function
-extern "C" void app_main()
+extern "C" void app_main(void)
 {
-    esp_log_level_set("*", ESP_LOG_INFO); // Set global logging level to INFO
-    esp_log_level_set("LEDStrip", ESP_LOG_DEBUG); // Set specific logging level for LEDStrip class
+    esp_log_level_set("*", ESP_LOG_ERROR);
+
+    wifi_connect();
 
     Motors motors(motorPins);
-
-    Lights strip = Lights(89, GPIO_NUM_27); // Example: 90 LEDs on GPIO 14
+    Lights strip = Lights(89, GPIO_NUM_27);
     DFPlayer player;
-    player.begin(); // Now includes reset automatically
-    wait(1000); // Wait for initialization
+    player.begin();
+    wait(1000);
     player.setVolume(20);
 
     ZakskeScene scene1(strip, player, motors);
     BeukDeBallenScene scene2(strip, player, motors);
     HerdertjesScene scene3(strip, player, motors);
-    // scene3.play(); // Test play
 
     std::vector<Scene*> scenes = { &scene1, &scene2, &scene3 };
 
-    ButtonHandler buttons(strip, motors, buttonPins, ledPins, scenes);
+    SceneHandler sceneHandler(&scenes);
+    g_sceneHandler = &sceneHandler; // Assign to global pointer
+    ButtonHandler buttons(strip, motors, buttonPins, ledPins, sceneHandler);
     buttons.start();
 
     ESP_LOGI("Main", "Ready to go");
 
-    // Main thread can do other things
+    mqtt_client_start();
+
+    WebServer webServer(&sceneHandler);
+    webServer.start();
+
     while (true) {
-        // maybe update other logic or monitor sensors
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

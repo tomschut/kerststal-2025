@@ -12,10 +12,9 @@
 #include <tuple>
 #include <vector>
 
-static const char* TAG = "LEDStrip";
-
 class Lights {
 public:
+    const char* TAG = "LEDStrip";
     int numLEDs;
     Lights(int numLEDs, gpio_num_t dataPin)
         : numLEDs(numLEDs)
@@ -327,9 +326,11 @@ public:
         auto section_range = [this, n_sections](int section) -> std::pair<int, int> {
             int start = (numLEDs * section) / n_sections;
             int end = (numLEDs * (section + 1)) / n_sections;
-            if (start < 0) start = 0;
-            if (end > numLEDs) end = numLEDs;
-            return {start, end};
+            if (start < 0)
+                start = 0;
+            if (end > numLEDs)
+                end = numLEDs;
+            return { start, end };
         };
 
         while (elapsed < timeInMs) {
@@ -339,8 +340,7 @@ public:
 
                 // Pick a random color for this beat (same color for both sections)
                 auto color = std::make_tuple(static_cast<uint8_t>(esp_random() % 256),
-                                             static_cast<uint8_t>(esp_random() % 256),
-                                             static_cast<uint8_t>(esp_random() % 256));
+                    static_cast<uint8_t>(esp_random() % 256), static_cast<uint8_t>(esp_random() % 256));
 
                 // Fade in
                 for (int b = 0; b <= 255; b += 16) {
