@@ -19,6 +19,7 @@ private:
     uart_port_t uart_num;
     static const char* TAG;
 
+
     void sendCommand(uint8_t cmd[], size_t len)
     {
         uart_write_bytes(uart_num, (const char*)cmd, len);
@@ -77,8 +78,10 @@ public:
 
         // Send initial reset like Arduino library does
         // reset();
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(1500));
 
+        setVolume(20);
+        stop();
         ESP_LOGI(TAG, "DFPlayer initialized");
     }
 
@@ -124,22 +127,29 @@ public:
         ESP_LOGI(TAG, "Playing track %d", track);
     }
 
+    uint8_t getVolume() { return volume; }
+
     void setVolume(uint8_t vol)
     {
+        // store the volume locally
+        volume = vol;
         if (vol > 30)
             vol = 30;
         sendCommand(0x06, 0x00, vol);
-        ESP_LOGI(TAG, "Volume: %d", vol);
+        // ESP_LOGI(TAG, "Volume: %d", vol);
     }
 
     void reset()
     {
         sendCommand(0x0C);
-        ESP_LOGI(TAG, "Reset");
+        // ESP_LOGI(TAG, "Reset");
     }
 
     void sleep() { sendCommand(0x0A); }
     void wakeUp() { sendCommand(0x0B); }
+
+private:
+    uint8_t volume = 20;
 };
 
 const char* DFPlayer::TAG = "DFPlayer";

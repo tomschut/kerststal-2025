@@ -108,15 +108,15 @@ private:
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ESP32 Scene Controller</title>
+  <title>Kerststal 2025</title>
   <meta charset="utf-8">
 </head>
 <body>
-  <h1>ESP32 Scene Controller</h1>
-  <button onclick="fetch('/play?scene=0', {method:'POST'})">Play Scene Zakske</button>
-  <button onclick="fetch('/play?scene=1', {method:'POST'})">Play Scene Beuk</button>
-  <button onclick="fetch('/play?scene=2', {method:'POST'})">Play Scene Herdertjes</button>
-  <button onclick="fetch('/stop', {method:'POST'})">Stop Scene</button>
+  <h1>Kerststal 2025 Scene Controller</h1>
+  <button onclick="fetch('/play?scene=0', {method:'POST'}).then(() => { updateStatus(); updatePlayCounts(); })">Play Scene Zakske</button>
+  <button onclick="fetch('/play?scene=1', {method:'POST'}).then(() => { updateStatus(); updatePlayCounts(); })">Play Scene Beuk</button>
+  <button onclick="fetch('/play?scene=2', {method:'POST'}).then(() => { updateStatus(); updatePlayCounts(); })">Play Scene Herdertjes</button>
+  <button onclick="fetch('/stop', {method:'POST'}).then(() => { updateStatus(); updatePlayCounts(); })">Stop Scene</button>
   <pre id="status"></pre>
   <script>
     async function updateStatus() {

@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "main.cpp"
+    SRCS "wifi_connect.cpp" "main.cpp"
     INCLUDE_DIRS "."
     REQUIRES esp_http_server esp_wifi
 )

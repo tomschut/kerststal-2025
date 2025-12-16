@@ -21,6 +21,7 @@ public:
     void play() override
     {
         ESP_LOGI("ZakskeScene", "Playing Zakske Scene");
+        player.setVolume(30);
         player.playZakske();
         wait(2 * 1000); // wait for intro
 

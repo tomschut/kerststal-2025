@@ -1,20 +1,34 @@
 #ifndef SCENE_HANDLER_HPP
 #define SCENE_HANDLER_HPP
+#include "actuators/lights.hpp"
+#include "actuators/motors.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "scene.hpp"
+#include "web/mqtt_client.hpp"
 #include <string>
 #include <vector>
 
 class SceneHandler {
 public:
-    SceneHandler(std::vector<Scene*>* scenes)
+    SceneHandler(std::vector<Scene*>* scenes, Lights& strip, Motors& motors, MqttClient* mqttClient = nullptr)
         : scenes_(scenes)
+        , strip_(strip)
+        , motors_(motors)
+        , mqttClient_(mqttClient)
     {
         nvs_flash_init();
         loadPlayCounts();
+    }
+
+    void start()
+    {
+        xTaskCreate(&SceneHandler::ambientGlowTaskEntry, "ambient_glow_task", 4096, this, 5, &ambientGlowTaskHandle_);
+        xTaskCreate(&SceneHandler::blinkTaskEntry, "blink_task", 2048, this, 5, &blinkTaskHandle_);
+        xTaskCreate(&SceneHandler::keepMotorsStoppedTaskEntry, "keep_motors_stopped_task", 2048, this, 5,
+            &keepMotorsStoppedTaskHandle_);
     }
 
     void playScene(size_t index)
@@ -60,8 +74,14 @@ public:
 
 private:
     std::vector<Scene*>* scenes_;
+    Lights& strip_;
+    Motors& motors_;
+    MqttClient* mqttClient_;
     int currentScene { -1 };
     TaskHandle_t sceneTaskHandle_ = nullptr;
+    TaskHandle_t ambientGlowTaskHandle_ = nullptr;
+    TaskHandle_t blinkTaskHandle_ = nullptr;
+    TaskHandle_t keepMotorsStoppedTaskHandle_ = nullptr;
     std::vector<int> playCounts_;
 
     static void sceneTaskEntry(void* param) { static_cast<SceneHandler*>(param)->sceneTask(); }
@@ -69,9 +89,12 @@ private:
     void sceneTask()
     {
         if (currentScene >= 0 && currentScene < scenes_->size()) {
+            if (mqttClient_) {
+                mqttClient_->publish("nativity/scenePlay", std::to_string(currentScene).c_str());
+            }
             (*scenes_)[currentScene]->play();
             playCounts_[currentScene]++;
-            savePlayCounts();
+            // savePlayCounts(); //todo turn on voor echt
         }
         currentScene = -1;
         sceneTaskHandle_ = nullptr;
@@ -104,6 +127,41 @@ private:
                 playCounts_[i] = value;
             }
             nvs_close(nvs_handle);
+        }
+    }
+
+    static void ambientGlowTaskEntry(void* param) { static_cast<SceneHandler*>(param)->ambientGlowTask(); }
+    static void blinkTaskEntry(void* param) { static_cast<SceneHandler*>(param)->blinkTask(); }
+    static void keepMotorsStoppedTaskEntry(void* param) { static_cast<SceneHandler*>(param)->keepMotorsStoppedTask(); }
+
+    void ambientGlowTask()
+    {
+        while (true) {
+            if (!isScenePlaying()) {
+                strip_.ambientGlow();
+            }
+            vTaskDelay(pdMS_TO_TICKS(50));
+        }
+    }
+
+    void blinkTask()
+    {
+        while (true) {
+            if (!isScenePlaying()) {
+                // Zet alle leds aan/uit (pas aan naar jouw leds)
+                // Bijvoorbeeld: strip_.setBlinkPattern();
+            }
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
+
+    void keepMotorsStoppedTask()
+    {
+        while (true) {
+            if (!isScenePlaying()) {
+                motors_.stopAll();
+            }
+            vTaskDelay(pdMS_TO_TICKS(100));
         }
     }
 };

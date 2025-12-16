@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #define MOTOR_SPEED_FORWARD 2000 // duty voor volle snelheid vooruit
-#define MOTOR_SPEED_STOP 1460 // duty voor stop
+#define MOTOR_SPEED_STOP 1465 // duty voor stop
 #define MOTOR_SPEED_BACK 1000 // duty voor volle snelheid achteruit
 
 class Motor {
@@ -50,20 +50,30 @@ public:
         setupMotorPWM();
     }
 
-    void stop() { setMotorDuty(MOTOR_SPEED_STOP); }
+    void stop()
+    {
+        this->speed = 0;
+        setMotorDuty(MOTOR_SPEED_STOP);
+    }
 
     void setSpeed(int speed, uint32_t duration_ms = 0)
     {
+        this->speed = speed;
         // Clamp speed tussen -100 en 100
         if (speed > 100)
             speed = 100;
         if (speed < -100)
             speed = -100;
 
+        if (speed == 0) {
+            setMotorDuty(MOTOR_SPEED_STOP);
+            return;
+        }
         // Map speed (-100 tot 100) naar duty cycle (1000 tot 2000 us)
-        uint32_t duty_us = MOTOR_SPEED_STOP + (speed * (MOTOR_SPEED_FORWARD - MOTOR_SPEED_STOP) / 100);
+        double duty_us
+            = MOTOR_SPEED_STOP + (static_cast<double>(speed) * (MOTOR_SPEED_FORWARD - MOTOR_SPEED_STOP) / 100.0);
 
-        setMotorDuty(duty_us);
+        setMotorDuty(static_cast<uint32_t>(duty_us));
 
         // Als duration is opgegeven, stop na die tijd
         if (duration_ms > 0) {
@@ -71,6 +81,11 @@ public:
             setMotorDuty(MOTOR_SPEED_STOP);
         }
     }
+
+    int getSpeed() const { return speed; }
+
+private:
+    int speed = 0; // huidige snelheid instelling
 };
 
 #endif // MOTOR_HPP

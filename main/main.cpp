@@ -30,7 +30,9 @@ SceneHandler* g_sceneHandler = nullptr;
 // Main function
 extern "C" void app_main(void)
 {
-    esp_log_level_set("*", ESP_LOG_ERROR);
+    esp_log_level_set("*", ESP_LOG_INFO);
+    esp_log_level_set("DFPlayer", ESP_LOG_WARN);
+    esp_log_level_set("ButtonHandler", ESP_LOG_WARN);
 
     wifi_connect();
 
@@ -38,8 +40,6 @@ extern "C" void app_main(void)
     Lights strip = Lights(89, GPIO_NUM_27);
     DFPlayer player;
     player.begin();
-    wait(1000);
-    player.setVolume(20);
 
     ZakskeScene scene1(strip, player, motors);
     BeukDeBallenScene scene2(strip, player, motors);
@@ -47,17 +47,16 @@ extern "C" void app_main(void)
 
     std::vector<Scene*> scenes = { &scene1, &scene2, &scene3 };
 
-    SceneHandler sceneHandler(&scenes);
-    g_sceneHandler = &sceneHandler; // Assign to global pointer
-    ButtonHandler buttons(strip, motors, buttonPins, ledPins, sceneHandler);
+    MqttClient mqttClient;
+    mqttClient.start();
+
+    SceneHandler sceneHandler(&scenes, strip, motors, &mqttClient);
+    ButtonHandler buttons(buttonPins, ledPins, sceneHandler);
     buttons.start();
-
-    ESP_LOGI("Main", "Ready to go");
-
-    mqtt_client_start();
 
     WebServer webServer(&sceneHandler);
     webServer.start();
+    ESP_LOGI("Main", "Ready to go");
 
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000));

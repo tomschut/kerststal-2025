@@ -37,6 +37,9 @@ public:
         led_strip_clear(strip_handle);
 
         ESP_LOGI(TAG, "LED strip initialized on GPIO %d with %d LEDs", dataPin, numLEDs);
+
+        // Ensure all LEDs are off at startup
+        turnOff();
     }
 
     ~Lights()
@@ -51,6 +54,16 @@ public:
         led_strip_clear(strip_handle);
         led_strip_refresh(strip_handle);
         // ESP_LOGI(TAG, "LED strip turned off");
+    }
+
+    void setBrightness(int brightness)
+    {
+        // Clamp brightness to 0-255
+        if (brightness < 0)
+            brightness = 0;
+        if (brightness > 255)
+            brightness = 255;
+        this->brightness = brightness;
     }
 
     void setLed(int index, std::tuple<uint8_t, uint8_t, uint8_t> color, int brightness = 255, bool refresh = true)
@@ -403,6 +416,7 @@ public:
 private:
     gpio_num_t dataPin;
     led_strip_handle_t strip_handle;
+    int brightness = 0;
 
     // HSV to RGB conversion (h in [0, 360), s and v in [0, 1])
     static std::tuple<uint8_t, uint8_t, uint8_t> hsv2rgb(float h, float s, float v)

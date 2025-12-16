@@ -1,88 +1,70 @@
 # Kerststal 2025
 
-ESP32-based nativity scene with:
+## 🎄 Fijne feestdagen! 🎄
 
-- WS2812B LED strip control
-- DFPlayer Mini audio playback
-- Motor control for animations
-- Multiple scenes
+Welkom bij het Kerststal 2025 project!  
+Deze kerststal is een experimenteel, creatief en vooral gezellig project. Veel plezier met bouwen en beleven!
 
-## Hardware
+---
 
-- ESP32
-- WS2812B LED strip (90 LEDs)
-- DFPlayer Mini
-- DC Motor
+## Introduction
 
-## Build
+This project controls an interactive nativity scene using an ESP32.  
+You can start different scenes with buttons or via a web interface. Each scene combines motors, lights, and music for a festive experience.
 
-```bash
-idf.py build
-idf.py flash monitor
-```
+---
 
-## Overview electronics
+## Buttons
 
-```mermaid
-graph TD
-    %% ESP32 pins
-    ESP32["ESP32 (15 pins)"]
+- Each button starts a specific scene (e.g., Zakske, Beuk, Herdertjes).
+- Press a button to activate its scene.
+- The LED next to the button lights up when the scene is active.
+- Buttons are connected to the ESP32 with pull-up resistors.
 
-    %% Power
-    VCC5V["+5V voeding"]
-    GND["GND"]
+**Example pinout:**
 
-    %% LED strip
-    LEDStrip["WS2812B LED-strip"]
-    Res330["330Ω serie weerstand"]
+| Button | GPIO | LED  |
+|--------|------|------|
+| 1      |  32  |  25  |
+| 2      |  33  |  26  |
+| 3      |  34  |  27  |
 
-    %% DFPlayer
-    DFPlayer["DFPlayer Mini"]
+---
 
-    %% Motors
-    Motor1["FS90R Motor 1"]
-    Motor2["FS90R Motor 2"]
-    Motor3["FS90R Motor 3"]
-    Motor4["FS90R Motor 4"]
+## Motors
 
-    %% Buttons
-    Button1["Button 1"]
-    Button2["Button 2"]
-    Button3["Button 3"]
+- Multiple motors are used (for example, for the tree and the angel).
+- Motors are controlled via PWM (servo/ESC signal).
+- Each motor uses its own channel and GPIO.
+- Speed is set in software; "stop" sets the PWM signal to the neutral value.
 
-    %% Power connections
-    VCC5V --> LEDStrip
-    VCC5V --> DFPlayer
-    VCC5V --> Motor1
-    VCC5V --> Motor2
-    VCC5V --> Motor3
-    VCC5V --> Motor4
+**Example motor mapping:**
 
-    GND --> LEDStrip
-    GND --> DFPlayer
-    GND --> Motor1
-    GND --> Motor2
-    GND --> Motor3
-    GND --> Motor4
-    GND --> Button1
-    GND --> Button2
-    GND --> Button3
+| Motor      | GPIO | Channel |
+|------------|------|---------|
+| Tree       |  17  |   0     |
+| Angel      |  18  |   1     |
 
-    %% LED data
-    ESP32 -->|GPIO14| Res330 --> LEDStrip
+---
 
-    %% DFPlayer UART
-    ESP32 -->|GPIO26 TX| DFPlayer
-    ESP32 -->|GPIO27 RX| DFPlayer
+## Wiring
 
-    %% Motors signal
-    ESP32 -->|GPIO33| Motor1
-    ESP32 -->|GPIO32| Motor2
-    ESP32 -->|GPIO35| Motor3
-    ESP32 -->|GPIO34| Motor4
+- **Buttons:** Connect one side of the button to the desired GPIO, the other to GND. Use internal pull-up.
+- **LEDs:** Anode to GPIO via a resistor (~220Ω), cathode to GND.
+- **Motors:** PWM signal to the correct GPIO, power directly from a stable 5V source (not via the ESP32!).
+- **LED strip:** Data to GPIO (e.g., 27), power 5V, GND shared with ESP32.
 
-    %% Buttons signal
-    ESP32 -->|GPIO2| Button1
-    ESP32 -->|GPIO15| Button2
-    ESP32 -->|GPIO18| Button3
-```
+**Important:**  
+Always use a **common GND** for all components!
+
+---
+
+## Disclaimer
+
+> This project is "vibecoded" – built for fun and creativity.  
+> Use at your own risk and enjoy the Christmas vibes!
+
+---
+
+Merry Christmas and happy building!  
+✨

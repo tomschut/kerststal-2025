@@ -31,9 +31,11 @@ extern "C" void wifi_connect()
     esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    cfg.nvs_enable = 0; // Disable NVS usage for WiFi
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     wifi_config_t wifi_config = {};
+    cfg.nvs_enable = 0; // Disable NVS usage for WiFi
     strcpy((char*)wifi_config.sta.ssid, WIFI_SSID);
     strcpy((char*)wifi_config.sta.password, WIFI_PASS);
 
@@ -49,4 +51,11 @@ extern "C" void wifi_connect()
     // Wait for connection
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
     ESP_LOGI("wifi", "Connected to WiFi");
+    esp_netif_ip_info_t ip_info;
+    esp_netif_t* sta_netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    if (sta_netif && esp_netif_get_ip_info(sta_netif, &ip_info) == ESP_OK) {
+        ESP_LOGI("wifi", "IP Address: " IPSTR, IP2STR(&ip_info.ip));
+    } else {
+        ESP_LOGE("wifi", "Failed to obtain IP address");
+    }
 }

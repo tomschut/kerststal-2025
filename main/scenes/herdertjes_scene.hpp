@@ -21,26 +21,106 @@ public:
 
     void play() override
     {
-        player.setVolume(25);
-        ESP_LOGI("HerdertjesScene", "Playing Herdertjes Scene");
+        player.setVolume(30);
+        ESP_LOGI("HerdertjesScene", "Playing ruimtelijke Herdertjes Scene");
         player.playShepherd();
-        motors.getAngelMotor().setSpeed(20);
 
-        // 10 t/m 32 — kleur R251 G255 B15 op LED 70 t/m 83
-        strip.setMultipleLeds(70, 83, std::make_tuple(251, 255, 15), 255);
-        wait((32 - 10 + 1) * 1000); // of jouw gewenste tijd
+        // Wait 3 seconds before starting
+        wait(3000);
 
-        // 33 t/m 44 — kleur R255 G255 B255 op LED 84
-        strip.setLed(84, std::make_tuple(255, 255, 255), 255);
-        wait((44 - 33 + 1) * 1000);
+        // Kleuren
+        auto nightBlue = std::make_tuple(25, 40, 90);
+        auto deepGreen = std::make_tuple(30, 90, 50);
+        auto warmGold = std::make_tuple(240, 220, 140);
+        auto softPurple = std::make_tuple(120, 90, 160);
+        auto softWhite = std::make_tuple(255, 255, 255);
 
-        // 33 t/m 44 — kleur R255 G255 B255 op LED 85
-        strip.setLed(85, std::make_tuple(255, 255, 255), 255);
-        wait((44 - 33 + 1) * 1000);
+        // =======================================
+        // FASE 1 – Nacht valt (alles komt op)
+        // =======================================
+        motors.getTreeMotor().setSpeed(15); // Use a higher speed to avoid stutter
+        motors.getAngelMotor().stop();
 
-        // 45 t/m 54 — kleur R251 G255 B15 op LED 70 t/m 83
-        strip.setMultipleLeds(70, 83, std::make_tuple(251, 255, 15), 255);
-        wait((54 - 45 + 1) * 1000);
+        // Hemel
+        for (int b = 0; b <= 120; b += 3) {
+            strip.setMultipleLeds(0, 29, nightBlue, b);
+            wait(80);
+        }
+
+        // Veld
+        for (int b = 0; b <= 100; b += 3) {
+            strip.setMultipleLeds(30, 69, deepGreen, b);
+            wait(80);
+        }
+
+        // Herders (zacht goud)
+        for (int b = 0; b <= 140; b += 4) {
+            strip.setMultipleLeds(70, 83, warmGold, b);
+            wait(90);
+        }
+
+        // =======================================
+        // FASE 2 – Rustige ademhaling
+        // =======================================
+        for (int cycle = 0; cycle < 2; cycle++) {
+            for (int b = 110; b <= 160; b += 3) {
+                strip.setMultipleLeds(70, 83, warmGold, b);
+                strip.setMultipleLeds(30, 69, deepGreen, b - 30);
+                wait(120);
+            }
+            for (int b = 160; b >= 110; b -= 3) {
+                strip.setMultipleLeds(70, 83, warmGold, b);
+                strip.setMultipleLeds(30, 69, deepGreen, b - 30);
+                wait(120);
+            }
+        }
+
+        wait(2 * 1000);
+        // =======================================
+        // FASE 3 – Aankondiging (paars licht)
+        // =======================================
+        motors.getAngelMotor().setSpeed(-10);
+
+        for (int b = 0; b <= 160; b += 4) {
+            strip.setMultipleLeds(0, 29, softPurple, b);
+            strip.setMultipleLeds(70, 83, warmGold, 150);
+            strip.setMultipleLeds(84, 88, softWhite, b);
+            wait(90);
+        }
+
+        // =======================================
+        // FASE 4 – Engelen zingen
+        // =======================================
+        motors.getTreeMotor().setSpeed(15); // Use a higher speed to avoid stutter
+        motors.getAngelMotor().setSpeed(-25);
+
+        for (int pulse = 0; pulse < 3; pulse++) {
+            for (int b = 160; b <= 240; b += 4) {
+                strip.setMultipleLeds(70, 83, warmGold, b);
+                strip.setMultipleLeds(84, 88, softWhite, b);
+                strip.setMultipleLeds(0, 29, softPurple, b - 40);
+                wait(80);
+            }
+            for (int b = 240; b >= 160; b -= 4) {
+                strip.setMultipleLeds(70, 83, warmGold, b);
+                strip.setMultipleLeds(84, 88, softWhite, b);
+                strip.setMultipleLeds(0, 29, softPurple, b - 40);
+                wait(80);
+            }
+        }
+
+        // =======================================
+        // FASE 5 – Terug naar stilte
+        // =======================================
+        motors.getAngelMotor().setSpeed(-5);
+        motors.getTreeMotor().setSpeed(15); // Use a higher speed to avoid stutter
+
+        for (int b = 140; b >= 0; b -= 4) {
+            strip.setMultipleLeds(70, 83, warmGold, b);
+            strip.setMultipleLeds(84, 88, softWhite, b);
+            strip.setMultipleLeds(0, 69, nightBlue, b / 2);
+            wait(100);
+        }
 
         stop();
     }
