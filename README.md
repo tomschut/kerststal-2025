@@ -14,6 +14,26 @@ You can start different scenes with buttons or via a web interface. Each scene c
 
 ---
 
+## Webserver
+
+- The ESP32 runs a built-in webserver.
+- You can access the web interface from any device on the same network by browsing to the ESP32's IP address.
+- The web interface allows you to:
+  - Start scenes remotely
+  - Stop the current scene
+  - View the current status and play counts in real time
+
+---
+
+## MQTT
+
+- The project supports MQTT for integration with home automation or remote monitoring.
+- The ESP32 publishes scene activity and play counts to a configurable MQTT broker.
+- You can subscribe to these topics to monitor which scene is active or how often each scene has been played.
+- MQTT credentials and broker address are configured in the project settings.
+
+---
+
 ## Buttons
 
 - Each button starts a specific scene (e.g., Zakske, Beuk, Herdertjes).
@@ -23,11 +43,11 @@ You can start different scenes with buttons or via a web interface. Each scene c
 
 **Example pinout:**
 
-| Button | GPIO | LED  |
-|--------|------|------|
-| 1      |  32  |  25  |
-| 2      |  33  |  26  |
-| 3      |  34  |  27  |
+| Button | GPIO | LED |
+| ------ | ---- | --- |
+| 1      | 32   | 25  |
+| 2      | 33   | 26  |
+| 3      | 34   | 27  |
 
 ---
 
@@ -40,10 +60,10 @@ You can start different scenes with buttons or via a web interface. Each scene c
 
 **Example motor mapping:**
 
-| Motor      | GPIO | Channel |
-|------------|------|---------|
-| Tree       |  17  |   0     |
-| Angel      |  18  |   1     |
+| Motor | GPIO | Channel |
+| ----- | ---- | ------- |
+| Tree  | 17   | 0       |
+| Angel | 18   | 1       |
 
 ---
 

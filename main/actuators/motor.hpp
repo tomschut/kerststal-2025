@@ -2,13 +2,12 @@
 #define MOTOR_HPP
 #include "driver/ledc.h"
 #include "esp_err.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <stdio.h>
 
 #define MOTOR_SPEED_FORWARD 2000 // duty voor volle snelheid vooruit
-#define MOTOR_SPEED_STOP 1465 // duty voor stop
+#define MOTOR_SPEED_STOP 1455 // duty voor stop
 #define MOTOR_SPEED_BACK 1000 // duty voor volle snelheid achteruit
 
 class Motor {

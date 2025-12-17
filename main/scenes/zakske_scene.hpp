@@ -38,34 +38,39 @@ public:
         // ----------------------------
         // strip.setMultipleLeds(52, 62, makeColor(251, 255, 15), 255);
         ESP_LOGI("ZakskeScene", "Bliksem");
-        strip.lightning(48, 79, 5, 100, 200);
-        wait(2000);
+        strip.lightning(51, 79, 5, 100, 200);
+        wait(500);
 
         // ----------------------------
         // 26 t/m 27 — LED 45 t/m 49
         // ----------------------------
         ESP_LOGI("ZakskeScene", "Stal");
         strip.setMultipleLeds(44, 48, makeColor(255, 15, 243), 128);
-        strip.setMultipleLeds(23, 25, makeColor(255, 36, 15), 128);
+        strip.setMultipleLeds(19, 30, makeColor(255, 36, 15), 128);
         wait(2000);
 
         // ----------------------------
         // 27 t/m 29 — losse leds
         // ----------------------------
         ESP_LOGI("ZakskeScene", "Krib os ezel");
+        strip.setLed(20, makeColor(119, 15, 255), 128);
+        strip.setLed(21, makeColor(119, 15, 255), 128);
+        strip.setLed(22, makeColor(119, 15, 255), 128);
         strip.setLed(23, makeColor(119, 15, 255), 128);
         strip.setLed(24, makeColor(255, 15, 243), 128);
         strip.setLed(25, makeColor(255, 36, 15), 128);
         strip.setLed(26, makeColor(255, 140, 15), 128);
         strip.setLed(27, makeColor(251, 255, 15), 128);
         strip.setLed(28, makeColor(68, 255, 15), 128);
-        wait(3000);
+        strip.setLed(29, makeColor(68, 255, 15), 128);
+        strip.setLed(30, makeColor(68, 255, 15), 128);
+        wait(4000);
 
         // ----------------------------
         // 31 t/m 38 — reeks losse leds
         // ----------------------------
         ESP_LOGI("ZakskeScene", "ster");
-        strip.setLed(50, makeColor(251, 255, 15), 255);
+        strip.setLed(49, makeColor(251, 255, 15), 255);
         strip.setLed(54, makeColor(251, 255, 15), 255);
         strip.setLed(57, makeColor(251, 255, 15), 255);
         strip.setLed(60, makeColor(251, 255, 15), 255);
@@ -76,21 +81,33 @@ public:
         // extra blok 35 t/m 38
         ESP_LOGI("ZakskeScene", "fonkelen");
         strip.setMultipleLeds(60, 64, makeColor(251, 255, 15), 255);
-        strip.setMultipleLeds(50, 57, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(49, 57, makeColor(251, 255, 15), 255);
         strip.turnOff();
         wait(100);
         strip.setMultipleLeds(60, 64, makeColor(251, 255, 15), 255);
-        strip.setMultipleLeds(50, 57, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(49, 57, makeColor(251, 255, 15), 255);
         strip.turnOff();
         wait(100);
         strip.setMultipleLeds(60, 64, makeColor(251, 255, 15), 255);
-        strip.setMultipleLeds(50, 57, makeColor(251, 255, 15), 255);
+        strip.setMultipleLeds(49, 57, makeColor(251, 255, 15), 255);
         strip.turnOff();
         wait(100);
         strip.setMultipleLeds(60, 64, makeColor(251, 255, 15), 255);
-        strip.setMultipleLeds(50, 57, makeColor(251, 255, 15), 255);
-        wait(3500);
+        strip.setMultipleLeds(49, 57, makeColor(251, 255, 15), 255);
 
+        strip.setLed(20, makeColor(119, 15, 255), 128);
+        strip.setLed(21, makeColor(119, 15, 255), 128);
+        strip.setLed(22, makeColor(119, 15, 255), 128);
+        strip.setLed(23, makeColor(119, 15, 255), 128);
+        strip.setLed(24, makeColor(255, 15, 243), 128);
+        strip.setLed(25, makeColor(255, 36, 15), 128);
+        strip.setLed(26, makeColor(255, 140, 15), 128);
+        strip.setLed(27, makeColor(251, 255, 15), 128);
+        strip.setLed(28, makeColor(68, 255, 15), 128);
+        strip.setLed(29, makeColor(68, 255, 15), 128);
+        strip.setLed(30, makeColor(68, 255, 15), 128);
+
+        wait(3500);
         // --------
         // 39 — UIT
         // --------
@@ -106,7 +123,7 @@ public:
             else
                 strip.setLed(i, makeColor(15, 254, 255), 128);
         }
-        wait(3000);
+        wait(4000);
 
         strip.turnOff();
         wait(100);
@@ -126,7 +143,7 @@ public:
         // ----------------------------
         strip.setLed(33, makeColor(68, 255, 15), 128);
         strip.setLed(32, makeColor(15, 254, 255), 128);
-        wait(2000);
+        wait(1500);
 
         // ----------------------------
         // 45 t/m 51 — 21 t/m 40 met kleurloop
@@ -144,7 +161,7 @@ public:
 
         for (int m = 0; m < 10; m++) {
             for (int k = 0; k < 7; k++) {
-                strip.setMultipleLeds(20, 39, kleuren[k], 255);
+                strip.setMultipleLeds(19, 36, kleuren[k], 255);
                 wait(100);
             }
         }

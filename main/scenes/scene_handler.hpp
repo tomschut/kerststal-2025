@@ -13,11 +13,14 @@
 
 class SceneHandler {
 public:
-    SceneHandler(std::vector<Scene*>* scenes, Lights& strip, Motors& motors, MqttClient* mqttClient = nullptr)
+    SceneHandler(std::vector<Scene*>* scenes, Lights& strip, Motors& motors, const gpio_num_t* leds, int nButtons,
+        MqttClient* mqttClient = nullptr)
         : scenes_(scenes)
         , strip_(strip)
         , motors_(motors)
+        , leds_(leds)
         , mqttClient_(mqttClient)
+        , numButtons(nButtons)
     {
         nvs_flash_init();
         loadPlayCounts();
@@ -29,15 +32,23 @@ public:
         xTaskCreate(&SceneHandler::blinkTaskEntry, "blink_task", 2048, this, 5, &blinkTaskHandle_);
         xTaskCreate(&SceneHandler::keepMotorsStoppedTaskEntry, "keep_motors_stopped_task", 2048, this, 5,
             &keepMotorsStoppedTaskHandle_);
+        xTaskCreate(&SceneHandler::backgroundTaskManagerEntry, "background_task_manager", 2048, this, 5, nullptr);
+        // GPIO setup (same as before)
+        for (int i = 0; i < numButtons; ++i) {
+            gpio_reset_pin(leds_[i]);
+            gpio_set_direction(leds_[i], GPIO_MODE_OUTPUT);
+        }
     }
 
     void playScene(size_t index)
     {
         if (index < scenes_->size() && !isScenePlaying()) {
+
             currentScene = index;
             xTaskCreate(&SceneHandler::sceneTaskEntry, "scene_task", 4096, this, 5, &sceneTaskHandle_);
         }
     }
+
 
     void stopScene()
     {
@@ -76,7 +87,9 @@ private:
     std::vector<Scene*>* scenes_;
     Lights& strip_;
     Motors& motors_;
+    const gpio_num_t* leds_;
     MqttClient* mqttClient_;
+    int numButtons;
     int currentScene { -1 };
     TaskHandle_t sceneTaskHandle_ = nullptr;
     TaskHandle_t ambientGlowTaskHandle_ = nullptr;
@@ -133,6 +146,7 @@ private:
     static void ambientGlowTaskEntry(void* param) { static_cast<SceneHandler*>(param)->ambientGlowTask(); }
     static void blinkTaskEntry(void* param) { static_cast<SceneHandler*>(param)->blinkTask(); }
     static void keepMotorsStoppedTaskEntry(void* param) { static_cast<SceneHandler*>(param)->keepMotorsStoppedTask(); }
+    static void backgroundTaskManagerEntry(void* param) { static_cast<SceneHandler*>(param)->backgroundTaskManager(); }
 
     void ambientGlowTask()
     {
@@ -147,9 +161,14 @@ private:
     void blinkTask()
     {
         while (true) {
-            if (!isScenePlaying()) {
-                // Zet alle leds aan/uit (pas aan naar jouw leds)
-                // Bijvoorbeeld: strip_.setBlinkPattern();
+            // Turn all LEDs ON
+            for (int i = 0; i < numButtons; ++i) {
+                gpio_set_level(leds_[i], 1);
+            }
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            // Turn all LEDs OFF
+            for (int i = 0; i < numButtons; ++i) {
+                gpio_set_level(leds_[i], 0);
             }
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
@@ -161,6 +180,40 @@ private:
             if (!isScenePlaying()) {
                 motors_.stopAll();
             }
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+    }
+
+    void backgroundTaskManager()
+    {
+        bool wasPlaying = false;
+        while (true) {
+            bool nowPlaying = isScenePlaying();
+            if (nowPlaying && !wasPlaying) {
+
+                int i = getCurrentScene();
+                gpio_set_level(leds_[i], 1);
+                for (int j = 0; j < numButtons; ++j) {
+                    if (j != i)
+                        gpio_set_level(leds_[j], 0);
+                }
+                // Scene just started: suspend background tasks
+                if (ambientGlowTaskHandle_)
+                    vTaskSuspend(ambientGlowTaskHandle_);
+                if (blinkTaskHandle_)
+                    vTaskSuspend(blinkTaskHandle_);
+                if (keepMotorsStoppedTaskHandle_)
+                    vTaskSuspend(keepMotorsStoppedTaskHandle_);
+            } else if (!nowPlaying && wasPlaying) {
+                // Scene just ended: resume background tasks
+                if (ambientGlowTaskHandle_)
+                    vTaskResume(ambientGlowTaskHandle_);
+                if (blinkTaskHandle_)
+                    vTaskResume(blinkTaskHandle_);
+                if (keepMotorsStoppedTaskHandle_)
+                    vTaskResume(keepMotorsStoppedTaskHandle_);
+            }
+            wasPlaying = nowPlaying;
             vTaskDelay(pdMS_TO_TICKS(100));
         }
     }

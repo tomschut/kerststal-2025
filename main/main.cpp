@@ -50,8 +50,9 @@ extern "C" void app_main(void)
     MqttClient mqttClient;
     mqttClient.start();
 
-    SceneHandler sceneHandler(&scenes, strip, motors, &mqttClient);
-    ButtonHandler buttons(buttonPins, ledPins, sceneHandler);
+    SceneHandler sceneHandler(&scenes, strip, motors, ledPins, 3, &mqttClient);
+    sceneHandler.start();
+    ButtonHandler buttons(buttonPins, sceneHandler);
     buttons.start();
 
     WebServer webServer(&sceneHandler);

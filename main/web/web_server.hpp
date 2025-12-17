@@ -108,15 +108,27 @@ private:
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Kerststal 2025</title>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kerststal 2025</title>
+  <style>
+    body { font-family:sans-serif; background:#fffbe6; margin:0; text-align:center; }
+    h1 { font-size:1.3em; margin:1em 0 0.5em 0; }
+    button {
+      width:90vw; max-width:340px; margin:0.7em auto; display:block;
+      font-size:1.3em; padding:1.2em 0; border-radius:1em; border:none;
+      background:#ffe082; color:#333; font-weight:bold;
+    }
+    button:last-of-type { background:#ffb3b3; color:#900; }
+    pre { background:#fff; border-radius:0.5em; padding:0.5em; font-size:1em; margin:1em auto; max-width:340px; }
+  </style>
 </head>
 <body>
   <h1>Kerststal 2025 Scene Controller</h1>
-  <button onclick="fetch('/play?scene=0', {method:'POST'}).then(() => { updateStatus(); updatePlayCounts(); })">Play Scene Zakske</button>
-  <button onclick="fetch('/play?scene=1', {method:'POST'}).then(() => { updateStatus(); updatePlayCounts(); })">Play Scene Beuk</button>
-  <button onclick="fetch('/play?scene=2', {method:'POST'}).then(() => { updateStatus(); updatePlayCounts(); })">Play Scene Herdertjes</button>
-  <button onclick="fetch('/stop', {method:'POST'}).then(() => { updateStatus(); updatePlayCounts(); })">Stop Scene</button>
+  <button onclick="fetch('/play?scene=0',{method:'POST'}).then(updateStatus)">Play Scene Zakske</button>
+  <button onclick="fetch('/play?scene=1',{method:'POST'}).then(updateStatus)">Play Scene Beuk</button>
+  <button onclick="fetch('/play?scene=2',{method:'POST'}).then(updateStatus)">Play Scene Herdertjes</button>
+  <button onclick="fetch('/stop',{method:'POST'}).then(updateStatus)">Stop Scene</button>
   <pre id="status"></pre>
   <script>
     async function updateStatus() {

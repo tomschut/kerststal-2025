@@ -20,6 +20,7 @@ public:
         : numLEDs(numLEDs)
         , dataPin(dataPin)
         , strip_handle(nullptr)
+        , lastColors(numLEDs, std::make_tuple(0, 0, 0))
     {
         // Configure LED strip with RMT peripheral
         led_strip_config_t strip_config = { .strip_gpio_num = dataPin,
@@ -87,6 +88,7 @@ public:
         uint8_t b = (std::get<2>(color) * brightness) / 255;
 
         led_strip_set_pixel(strip_handle, index, r, g, b);
+        lastColors[index] = color;
 
         if (refresh) {
             led_strip_refresh(strip_handle);
@@ -413,10 +415,298 @@ public:
         turnOff();
     }
 
+    void runningLights(int timeInMs, int speedMs = 100)
+    {
+        int elapsed = 0;
+        while (elapsed < timeInMs) {
+            for (int i = 0; i < numLEDs; ++i) {
+                // Turn all LEDs off
+                for (int j = 0; j < numLEDs; ++j) {
+                    setLed(j, std::make_tuple(0, 0, 0), 0, false);
+                }
+                // Turn on the current LED with a bright color
+                auto color = std::make_tuple(static_cast<uint8_t>(esp_random() % 256),
+                    static_cast<uint8_t>(esp_random() % 256), static_cast<uint8_t>(esp_random() % 256));
+                setLed(i, color, 255, false);
+                refresh();
+                wait(speedMs);
+                elapsed += speedMs;
+                if (elapsed >= timeInMs)
+                    break;
+            }
+        }
+        turnOff();
+    }
+
+    // method that displays fireworks, it moves the leds from two sides to multiple focal points getting brighter until
+    // the "explosion" at the focal points, and then move back again getting less bright, the focal points are chosen
+    // randomly
+    void fireworks(int timeInMs, int n_foci = 3, int travel_time_ms = 800, int explosion_duration_ms = 400)
+    {
+        if (numLEDs <= 2)
+            return;
+
+        if (n_foci <= 0)
+            n_foci = 1;
+        n_foci = std::min(n_foci, std::max(1, numLEDs / 4));
+
+        int elapsed = 0;
+        const int frame_ms = 25; // base frame time for smoother motion
+
+        while (elapsed < timeInMs) {
+            // pick unique focal points, spaced somewhat apart
+            std::vector<int> foci;
+            while ((int)foci.size() < n_foci) {
+                int candidate = esp_random() % numLEDs;
+                bool ok = true;
+                for (int f : foci) {
+                    if (abs(f - candidate) < std::max(3, numLEDs / 40)) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (ok)
+                    foci.push_back(candidate);
+            }
+
+            // assign each focus a warm-ish color
+            std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> colors;
+            for (int i = 0; i < (int)foci.size(); ++i) {
+                // warm colors toward yellow/white
+                uint8_t r = 200 + (esp_random() % 56);
+                uint8_t g = 120 + (esp_random() % 136);
+                uint8_t b = esp_random() % 80;
+                colors.emplace_back(r, g, b);
+            }
+
+            // inbound: comets move from both ends toward each focus
+            int steps_in = std::max(3, travel_time_ms / frame_ms);
+            for (int step = 0; step <= steps_in && elapsed < timeInMs; ++step) {
+                float t = static_cast<float>(step) / static_cast<float>(steps_in);
+                // clear with very low residual to keep trails from previous frames
+                for (int i = 0; i < numLEDs; ++i) {
+                    // slightly dim previous color to create fade (do not rely on lastColors alone)
+                    setLed(i, std::make_tuple(0, 0, 0), 0, false);
+                }
+
+                for (size_t fi = 0; fi < foci.size(); ++fi) {
+                    int focus = foci[fi];
+                    int leftStart = 0;
+                    int rightStart = numLEDs - 1;
+
+                    int leftPos = static_cast<int>(leftStart + t * (focus - leftStart));
+                    int rightPos = static_cast<int>(rightStart + t * (focus - rightStart));
+
+                    // draw head and a short fading trail for both comets
+                    const int trail = 5;
+                    for (int tr = 0; tr < trail; ++tr) {
+                        float trailFactor = (trail - tr) / static_cast<float>(trail);
+                        int lp = leftPos - tr;
+                        int rp = rightPos + tr;
+                        int brightness
+                            = static_cast<int>(255 * trailFactor * (0.3f + 0.7f * t)); // brighten toward focus
+                        if (lp >= 0 && lp < numLEDs) {
+                            auto col = colors[fi];
+                            setLed(lp, col, brightness, false);
+                        }
+                        if (rp >= 0 && rp < numLEDs) {
+                            auto col = colors[fi];
+                            setLed(rp, col, brightness, false);
+                        }
+                    }
+                }
+
+                refresh();
+                wait(frame_ms);
+                elapsed += frame_ms;
+            }
+
+            if (elapsed >= timeInMs)
+                break;
+
+            // explosion: expand bright burst then contract with a few flickers
+            const int explosion_steps = std::max(3, explosion_duration_ms / frame_ms);
+            for (int phase = 0; phase < 2 && elapsed < timeInMs; ++phase) {
+                // phase 0: expand, phase 1: contract
+                for (int s = 0; s <= explosion_steps && elapsed < timeInMs; ++s) {
+                    float t = static_cast<float>(s) / static_cast<float>(explosion_steps);
+                    int maxRadius = std::min(12, numLEDs / 6);
+                    int radius = static_cast<int>(t * maxRadius);
+                    for (int i = 0; i < numLEDs; ++i) {
+                        setLed(i, std::make_tuple(0, 0, 0), 0, false);
+                    }
+                    for (size_t fi = 0; fi < foci.size(); ++fi) {
+                        int focus = foci[fi];
+                        auto col = colors[fi];
+                        for (int off = -radius; off <= radius; ++off) {
+                            int idx = focus + off;
+                            if (idx < 0 || idx >= numLEDs)
+                                continue;
+                            float distFactor = 1.0f - (std::abs(off) / static_cast<float>(std::max(1, radius)));
+                            // pulsate brightness and add small random flicker
+                            int flick = (esp_random() % 40) - 20;
+                            int brightness = static_cast<int>((200 * distFactor + 55 * t) + flick);
+                            brightness = std::max(0, std::min(255, brightness));
+                            setLed(idx, col, brightness, false);
+                        }
+                    }
+                    refresh();
+                    wait(frame_ms);
+                    elapsed += frame_ms;
+                }
+            }
+
+            if (elapsed >= timeInMs)
+                break;
+
+            // outbound: comets return to their ends, fading out
+            int steps_out = std::max(3, travel_time_ms / frame_ms);
+            for (int step = 0; step <= steps_out && elapsed < timeInMs; ++step) {
+                float t = static_cast<float>(step) / static_cast<float>(steps_out);
+                // t goes 0..1, map to positions moving from focus back to ends
+                for (int i = 0; i < numLEDs; ++i) {
+                    setLed(i, std::make_tuple(0, 0, 0), 0, false);
+                }
+                for (size_t fi = 0; fi < foci.size(); ++fi) {
+                    int focus = foci[fi];
+                    int leftEnd = 0;
+                    int rightEnd = numLEDs - 1;
+                    int leftPos = static_cast<int>(focus + t * (leftEnd - focus));
+                    int rightPos = static_cast<int>(focus + t * (rightEnd - focus));
+                    const int trail = 5;
+                    for (int tr = 0; tr < trail; ++tr) {
+                        float trailFactor = (trail - tr) / static_cast<float>(trail);
+                        int lp = leftPos + tr; // trail away from focus
+                        int rp = rightPos - tr;
+                        int brightness = static_cast<int>(255 * trailFactor * (1.0f - t)); // fade as they leave
+                        if (lp >= 0 && lp < numLEDs) {
+                            auto col = colors[fi];
+                            setLed(lp, col, brightness, false);
+                        }
+                        if (rp >= 0 && rp < numLEDs) {
+                            auto col = colors[fi];
+                            setLed(rp, col, brightness, false);
+                        }
+                    }
+                }
+                refresh();
+                wait(frame_ms);
+                elapsed += frame_ms;
+            }
+
+            // small pause between rockets
+            wait(120);
+            elapsed += 120;
+        }
+
+        turnOff();
+    }
+
+    // method that draws people in while ambient is playing
+    void beckon()
+    {
+        // Light up LEDs one by one from both ends to the center
+        for (int i = 0; i < numLEDs / 2; ++i) {
+            auto color = std::make_tuple(0, 0, 255); // Blue color
+            setLed(i, color, 255, false);
+            setLed(numLEDs - 1 - i, color, 255, false);
+            refresh();
+            wait(100); // Delay between lighting up each pair
+        }
+
+        // Hold the full strip lit for a moment
+        wait(500);
+
+        // Turn off LEDs one by one from center to both ends
+        for (int i = numLEDs / 2 - 1; i >= 0; --i) {
+            setLed(i, std::make_tuple(0, 0, 0), 0, false);
+            setLed(numLEDs - 1 - i, std::make_tuple(0, 0, 0), 0, false);
+            refresh();
+            wait(100); // Delay between turning off each pair
+        }
+    }
+
+    // Returns the last set color for a given LED index
+    std::tuple<uint8_t, uint8_t, uint8_t> getColor(int index) const
+    {
+        if (index < 0 || index >= numLEDs) {
+            return std::make_tuple(0, 0, 0);
+        }
+        return lastColors[index];
+    }
+
+    void runningOppositeNoNeighbors(int durationMs = 5000, int speedMs = 120, int runners = 4)
+    {
+        // runners: number of lights in each direction (total = runners*2)
+        // Each runner has a position and direction (+1 or -1)
+        struct Runner {
+            int pos;
+            int dir;
+            std::tuple<uint8_t, uint8_t, uint8_t> color;
+        };
+
+        std::vector<Runner> all;
+        // Left-to-right
+        for (int i = 0; i < runners; ++i) {
+            all.push_back({ i * (numLEDs / (runners + 1)), 1, std::make_tuple(255, 180 - 60 * i, 60 + 80 * i) });
+        }
+        // Right-to-left
+        for (int i = 0; i < runners; ++i) {
+            all.push_back(
+                { numLEDs - 1 - i * (numLEDs / (runners + 1)), -1, std::make_tuple(60 + 80 * i, 180 - 60 * i, 255) });
+        }
+
+        int elapsed = 0;
+        std::vector<int> prevPos(all.size(), -2);
+
+        while (elapsed < durationMs) {
+            // Clear strip
+            for (int i = 0; i < numLEDs; ++i)
+                setLed(i, std::make_tuple(0, 0, 0), 0, false);
+
+            // Mark occupied positions to avoid neighbors
+            std::vector<bool> occupied(numLEDs, false);
+            for (auto& r : all)
+                if (r.pos >= 0 && r.pos < numLEDs)
+                    occupied[r.pos] = true;
+
+            // Draw runners
+            for (size_t i = 0; i < all.size(); ++i) {
+                auto& r = all[i];
+                if (r.pos >= 0 && r.pos < numLEDs)
+                    setLed(r.pos, r.color, 255, false);
+            }
+            refresh();
+
+            // Move runners, skipping if next pos is occupied
+            for (size_t i = 0; i < all.size(); ++i) {
+                auto& r = all[i];
+                int next = r.pos + r.dir;
+                if (next >= 0 && next < numLEDs && !occupied[next]
+                    && (next - r.pos) * r.dir == 1) { // not skipping over
+                    prevPos[i] = r.pos;
+                    r.pos = next;
+                } else {
+                    // If blocked or at end, bounce back
+                    r.dir = -r.dir;
+                    r.pos += r.dir;
+                    // Prevent overlap after bounce
+                    if (r.pos >= 0 && r.pos < numLEDs && occupied[r.pos])
+                        r.pos -= r.dir;
+                }
+            }
+
+            wait(speedMs);
+            elapsed += speedMs;
+        }
+        turnOff();
+    }
+
 private:
     gpio_num_t dataPin;
     led_strip_handle_t strip_handle;
     int brightness = 0;
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> lastColors;
 
     // HSV to RGB conversion (h in [0, 360), s and v in [0, 1])
     static std::tuple<uint8_t, uint8_t, uint8_t> hsv2rgb(float h, float s, float v)

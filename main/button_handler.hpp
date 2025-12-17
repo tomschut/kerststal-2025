@@ -11,9 +11,8 @@
 
 class ButtonHandler {
 public:
-    ButtonHandler(const gpio_num_t* pins, const gpio_num_t* leds, SceneHandler& sceneHandler)
+    ButtonHandler(const gpio_num_t* pins, SceneHandler& sceneHandler)
         : pins_(pins)
-        , leds_(leds)
         , sceneHandler_(sceneHandler)
         , numButtons(sceneHandler.nScenes())
         , buttonTaskHandle_(nullptr)
@@ -24,7 +23,6 @@ public:
 
 private:
     const gpio_num_t* pins_;
-    const gpio_num_t* leds_;
     SceneHandler& sceneHandler_;
     int numButtons;
     TaskHandle_t buttonTaskHandle_;
@@ -33,11 +31,6 @@ private:
 
     void buttonTask()
     {
-        // GPIO setup (same as before)
-        for (int i = 0; i < numButtons; ++i) {
-            gpio_reset_pin(leds_[i]);
-            gpio_set_direction(leds_[i], GPIO_MODE_OUTPUT);
-        }
         for (int i = 0; i < numButtons; ++i) {
             gpio_config_t io_conf {};
             io_conf.intr_type = GPIO_INTR_DISABLE;
@@ -49,19 +42,26 @@ private:
         }
 
         while (true) {
+            // Read all button levels
+            std::vector<int> levels(numButtons);
             for (int i = 0; i < numButtons; ++i) {
-                int level = gpio_get_level(pins_[i]);
-                if (level == 0) { // button pressed
-                    ESP_LOGI("ButtonHandler", "Button %d pressed", i + 1);
+                levels[i] = gpio_get_level(pins_[i]);
+            }
 
-                    gpio_set_level(leds_[i], 1);
-                    for (int j = 0; j < numButtons; ++j) {
-                        if (j != i)
-                            gpio_set_level(leds_[j], 0);
+            // If button 0 and 2 are pressed at the same time, stop the scene
+            if (levels[0] == 0 && levels[2] == 0) {
+                ESP_LOGI("ButtonHandler", "Buttons 1 and 3 pressed together: stopping scene");
+                sceneHandler_.stopScene();
+                vTaskDelay(pdMS_TO_TICKS(500)); // debounce
+            } else {
+                // Normal button handling
+                for (int i = 0; i < numButtons; ++i) {
+                    if (levels[i] == 0) { // button pressed
+                        ESP_LOGI("ButtonHandler", "Button %d pressed", i + 1);
+                        vTaskDelay(pdMS_TO_TICKS(100)); // debounce
+                        sceneHandler_.playScene(i);
+                        vTaskDelay(pdMS_TO_TICKS(500)); // debounce
                     }
-                    vTaskDelay(pdMS_TO_TICKS(100)); // debounce
-                    sceneHandler_.playScene(i);
-                    vTaskDelay(pdMS_TO_TICKS(500)); // debounce
                 }
             }
             vTaskDelay(pdMS_TO_TICKS(50));
