@@ -2,6 +2,9 @@
 
 ## 🎄 Fijne feestdagen! 🎄
 
+Namens ons allemaal, fijne feestdagen!
+
+
 Welkom bij het Kerststal 2025 project!  
 Deze kerststal is een experimenteel, creatief en vooral gezellig project. Veel plezier met bouwen en beleven!
 
