@@ -3,7 +3,7 @@
 ## 🎄 Fijne feestdagen! 🎄
 
 Namens ons allemaal, fijne feestdagen!
-
+We hopen dat jij het kijken en luisteren net zo leuk vindt als wij het bouwen vonden. Probeer vooral alle knoppen, en als je minder tijd hebt DE GROENE!
 
 Welkom bij het Kerststal 2025 project!  
 Deze kerststal is een experimenteel, creatief en vooral gezellig project. Veel plezier met bouwen en beleven!
